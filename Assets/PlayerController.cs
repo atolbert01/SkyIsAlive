@@ -7,6 +7,7 @@ public class PlayerController : MonoBehaviour
     public float hopVelocity = 200.0f;
     public float dashVelocity = 600.0f;
     private Rigidbody2D rb2d;
+    private bool isDashing = false;
     // Start is called before the first frame update
     void Start()
     {
@@ -45,7 +46,11 @@ public class PlayerController : MonoBehaviour
             rb2d.gravityScale = 0.0f;
             rb2d.velocity = Vector2.zero;
             rb2d.AddForce(new Vector2(0, dashVelocity*dashV));
-            StartCoroutine("Dash");
+            if (!isDashing)
+            {
+                StartCoroutine("Dash");
+                isDashing = false;
+            }
         }
 
         if (dashH != 0)
@@ -53,41 +58,78 @@ public class PlayerController : MonoBehaviour
             rb2d.gravityScale = 0.0f;
             rb2d.velocity = Vector2.zero;
             rb2d.AddForce(new Vector2(dashVelocity*dashH, 0));
-            StartCoroutine("Dash");
+            if (!isDashing)
+            {
+                StartCoroutine("Dash");
+                isDashing = false;
+            }
         }
     }
 
     public void DashLeft()
     {
-        rb2d.gravityScale = 0.0f;
-        rb2d.velocity = Vector2.zero;
-        rb2d.AddForce(new Vector2(-dashVelocity, 0));
-        StartCoroutine("Dash");
+        if (!isDashing)
+        {
+            isDashing = true;
+            rb2d.gravityScale = 0.0f;
+            rb2d.velocity = Vector2.zero;
+            rb2d.AddForce(new Vector2(-dashVelocity, 0));
+            StartCoroutine("Dash");
+        }
     }
     public void DashRight()
     {
-        rb2d.gravityScale = 0.0f;
-        rb2d.velocity = Vector2.zero;
-        rb2d.AddForce(new Vector2(dashVelocity, 0));
-        StartCoroutine("Dash");
+        if (!isDashing)
+        {
+            isDashing = true;
+            rb2d.gravityScale = 0.0f;
+            rb2d.velocity = Vector2.zero;
+            rb2d.AddForce(new Vector2(dashVelocity, 0));
+            StartCoroutine("Dash");
+        }
     }
 
     public void DashUp()
     {
-        rb2d.gravityScale = 0.0f;
-        rb2d.velocity = Vector2.zero;
-        rb2d.AddForce(new Vector2(0, dashVelocity));
-        StartCoroutine("Dash");
+        if (!isDashing)
+        {
+            isDashing = true;
+            rb2d.gravityScale = 0.0f;
+            rb2d.velocity = Vector2.zero;
+            rb2d.AddForce(new Vector2(0, dashVelocity));
+            StartCoroutine("Dash");
+        }
     }
 
     public void DashDown()
     {
-        rb2d.gravityScale = 0.0f;
-        rb2d.velocity = Vector2.zero;
-        rb2d.AddForce(new Vector2(0, -dashVelocity));
-        StartCoroutine("Dash");
+        if (!isDashing)
+        {
+            isDashing = true;
+            rb2d.gravityScale = 0.0f;
+            rb2d.velocity = Vector2.zero;
+            rb2d.AddForce(new Vector2(0, -dashVelocity));
+            StartCoroutine("Dash"); 
+        }
     }
-    
+
+    public void HopLeft()
+    {
+        if (!isDashing)
+        {
+            rb2d.velocity = Vector2.zero;
+            rb2d.AddForce(new Vector2(-hopVelocity, hopVelocity));
+        }
+    }
+
+    public void HopRight()
+    {
+        if (!isDashing)
+        {
+            rb2d.velocity = Vector2.zero;
+            rb2d.AddForce(new Vector2(hopVelocity, hopVelocity));
+        }
+    }
 
     void OnCollisionEnter2D(Collision2D other)
     {
@@ -98,5 +140,6 @@ public class PlayerController : MonoBehaviour
     {
         yield return new WaitForSeconds(0.5f);
         rb2d.gravityScale = 1.0f;
+        isDashing = false;
     }
 }
