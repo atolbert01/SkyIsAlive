@@ -2,24 +2,24 @@ using System;
 using UnityEngine;
 using UnityEngine.Events;
 
+[System.Serializable]
+public class SwipeEvent : UnityEvent<Vector2> { }
+
 public class GestureManager : MonoBehaviour
 {
     public float swipeThreshold = 50f;
     public float tapThreshold = 0.1f;
     public float timeThreshold = 0.3f;
+    public float chargeTime = 1.0f;
 
-    public UnityEvent OnSwipeLeft;
-    public UnityEvent OnSwipeRight;
-    public UnityEvent OnSwipeUp;
-    public UnityEvent OnSwipeDown;
     public UnityEvent OnTapLeft;
     public UnityEvent OnTapRight;
+    public SwipeEvent OnSwipe;
 
+    private Vector2 fingerDownPos;
+    private Vector2 fingerUpPos;
 
-    private Vector2 fingerDown;
     private DateTime fingerDownTime;
-    private DateTime fingerPressTime;
-    private Vector2 fingerUp;
     private DateTime fingerUpTime;
 
     private bool beginTap = false;
@@ -28,13 +28,13 @@ public class GestureManager : MonoBehaviour
     {
         if (Input.GetMouseButtonDown(0)) 
         {
-            this.fingerDown = Input.mousePosition;
-            this.fingerUp = Input.mousePosition;
+            this.fingerDownPos = Input.mousePosition;
+            this.fingerUpPos = Input.mousePosition;
             this.fingerDownTime = DateTime.Now;
         }
         if (Input.GetMouseButtonUp(0)) 
         {
-            this.fingerDown = Input.mousePosition;
+            this.fingerDownPos = Input.mousePosition;
             this.fingerUpTime = DateTime.Now;
             this.CheckSwipe();
         }
@@ -42,23 +42,24 @@ public class GestureManager : MonoBehaviour
         {
             if (touch.phase == TouchPhase.Began) 
             {
-                if (!beginTap) beginTap = true;
+                beginTap = true;
 
-                this.fingerDown = touch.position;
-                this.fingerUp = touch.position;
+                this.fingerDownPos = touch.position;
+                this.fingerUpPos = touch.position;
                 this.fingerDownTime = DateTime.Now;
+                this.CheckTap(fingerDownTime);
             }
             if (touch.phase == TouchPhase.Ended) 
             {
-                this.fingerDown = touch.position;
+                this.fingerDownPos = touch.position;
                 this.fingerUpTime = DateTime.Now;
                 //if (beginTap) this.CheckTap(DateTime.Now);
                 this.CheckSwipe();
             }
             if (touch.phase == TouchPhase.Stationary)
             {
-                this.fingerDown = touch.position;
-                if (beginTap) this.CheckTap(DateTime.Now);
+                this.fingerDownPos = touch.position;
+                this.fingerDownTime = DateTime.Now;
             }
         }
     }
@@ -68,18 +69,18 @@ public class GestureManager : MonoBehaviour
         float duration = (float)endTime.Subtract(this.fingerDownTime).TotalSeconds;
         if (duration > this.tapThreshold) return;
 
-        float deltaX = this.fingerDown.x - this.fingerUp.x;
-        float deltaY = fingerDown.y - fingerUp.y;
+        float deltaX = this.fingerDownPos.x - this.fingerUpPos.x;
+        float deltaY = fingerDownPos.y - fingerUpPos.y;
 
         beginTap = false;
 
-        if (Math.Abs(deltaX) < this.swipeThreshold && Math.Abs(deltaY) < this.swipeThreshold)
+        if (Math.Abs(deltaX) < (this.swipeThreshold * 0.5f) && Math.Abs(deltaY) < (this.swipeThreshold * 0.5f))
         {
-            if (fingerDown.x < Screen.width * 0.5f)
+            if (fingerDownPos.x < Screen.width * 0.5f)
             {
                 this.OnTapLeft.Invoke();
             }
-            else if (fingerDown.x > Screen.width * 0.5f)
+            else if (fingerDownPos.x > Screen.width * 0.5f)
             {
                 this.OnTapRight.Invoke();
             }
@@ -90,47 +91,17 @@ public class GestureManager : MonoBehaviour
         float duration = (float)this.fingerUpTime.Subtract(this.fingerDownTime).TotalSeconds;
         if (duration > this.timeThreshold) return;
 
-        float deltaX = this.fingerDown.x - this.fingerUp.x;
-        float deltaY = fingerDown.y - fingerUp.y;
+        float deltaX = this.fingerDownPos.x - this.fingerUpPos.x;
+        float deltaY = fingerDownPos.y - fingerUpPos.y;
 
-        // Can be 0 (right), 1 (up), 2 (left), or 3 (down)
-        int swipeDir = -1;
-        if (Mathf.Abs(deltaX) > this.swipeThreshold) 
+        Vector2 dir = new Vector2(deltaX, deltaY);
+        dir.Normalize();
+
+        if (Mathf.Abs(deltaX) > this.swipeThreshold || Mathf.Abs(deltaY) > this.swipeThreshold) 
         {
-            if (deltaX > 0 && deltaX > deltaY) 
-            {
-                swipeDir = 0;
-                //this.OnSwipeRight.Invoke();
-                //Debug.Log("right");
-            } 
-            else if (deltaX < 0 && deltaX < deltaY) 
-            {
-                swipeDir = 2;
-                //this.OnSwipeLeft.Invoke();
-                //Debug.Log("left");
-            }
-        }
-        if (Mathf.Abs(deltaY) > this.swipeThreshold) 
-        {
-            if (deltaY > 0 && deltaY > deltaX) 
-            {
-                swipeDir = 1;
-                //this.OnSwipeUp.Invoke();
-                //Debug.Log("up");
-            } 
-            else if (deltaY < 0 && deltaY < deltaX) 
-            {
-                swipeDir = 3;
-                //this.OnSwipeDown.Invoke();
-                //Debug.Log("down");
-            }
+            this.OnSwipe.Invoke(dir);
         }
 
-        if (swipeDir == 0) this.OnSwipeRight.Invoke();
-        if (swipeDir == 1) this.OnSwipeUp.Invoke();
-        if (swipeDir == 2) this.OnSwipeLeft.Invoke();
-        if (swipeDir == 3) this.OnSwipeDown.Invoke();
-
-        this.fingerUp = this.fingerDown;
+        this.fingerUpPos = this.fingerDownPos;
     }
 }
