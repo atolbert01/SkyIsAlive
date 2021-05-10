@@ -3,7 +3,7 @@
 public class CameraFollow : MonoBehaviour
 {
 
-    public Transform followTransform;
+    private Transform followTransform;
     public BoxCollider2D mapBounds;
 
     private float xMin, xMax, yMin, yMax;
@@ -16,6 +16,7 @@ public class CameraFollow : MonoBehaviour
 
     private void Start()
     {
+        //followTransform = GameObject.FindGameObjectWithTag("Player").transform;
         xMin = mapBounds.bounds.min.x;
         xMax = mapBounds.bounds.max.x;
         yMin = mapBounds.bounds.min.y;
@@ -27,6 +28,8 @@ public class CameraFollow : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
+        if (followTransform == null) followTransform = GameObject.FindGameObjectWithTag("Player").transform;
+
         camY = Mathf.Clamp(followTransform.position.y, yMin + camOrthsize, yMax - camOrthsize);
         camX = Mathf.Clamp(followTransform.position.x, xMin + cameraRatio, xMax - cameraRatio);
         smoothPos = Vector3.Lerp(this.transform.position, new Vector3(camX, camY, this.transform.position.z), smoothSpeed);
