@@ -7,6 +7,7 @@ TagManager:
   - Ground
   - DashZone
   - Hazard
+  - Goal
   layers:
   - Default
   - TransparentFX

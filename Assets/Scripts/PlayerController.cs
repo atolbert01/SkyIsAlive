@@ -176,6 +176,11 @@ public class PlayerController : MonoBehaviour
                 StartCoroutine("MoveToPoint", (Vector2)other.gameObject.transform.position);
             }
         }
+
+        if (other.gameObject.tag == "Goal")
+        {
+            gm.GoalReached();
+        }
     }
 
     private void OnCollisionEnter2D(Collision2D other)

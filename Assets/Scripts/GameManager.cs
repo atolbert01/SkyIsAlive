@@ -18,6 +18,11 @@ public class GameManager : MonoBehaviour
         sc.ChangeScene(SceneManager.GetActiveScene().buildIndex);
     }
 
+    public void GoalReached()
+    {
+        sc.ChangeScene(SceneManager.GetActiveScene().buildIndex + 1);
+    }
+
     void Update()
     {
         
