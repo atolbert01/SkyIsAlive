@@ -9,9 +9,7 @@ public class PlayerController : MonoBehaviour
     private Rigidbody2D rb2d;
     private bool canDash = false;
     private bool isDashing = false;
-    private bool moveToRunning = false;
     private bool inDashZone = false;
-    private bool exitDashZone = false;
 
 
     public float swipeThreshold = 50f;
@@ -26,12 +24,16 @@ public class PlayerController : MonoBehaviour
     private DateTime fingerUpTime;
 
     private GameManager gm;
+    private Animator anim;
+
+    private bool facingRight = true;
 
     // Start is called before the first frame update
     void Start()
     {
         rb2d = GetComponent<Rigidbody2D>();
         gm = GameObject.Find("GameManager").GetComponent<GameManager>();
+        anim = GetComponent<Animator>();
     }
 
     // Update is called once per frame
@@ -77,16 +79,30 @@ public class PlayerController : MonoBehaviour
             }
         }
 
+        //if (!anim.GetCurrentAnimatorStateInfo(0).IsName("Bink_Flap")) anim.SetBool("isFlapping", false);
         if (move != 0)
         {
             if (!isDashing && !inDashZone)
             {
+                if (move == -1 && facingRight || move == 1 && !facingRight) Flip();
+                anim.SetBool("isGrounded", false);
+                anim.Play("Bink_Flap", -1, 0);
                 rb2d.velocity = Vector2.zero;
                 rb2d.AddForce(new Vector2(move * hopVelocity, hopVelocity));
             }
         }
     }
 
+    private void Flip()
+    {
+        // Switch the way the player is labelled as facing
+        facingRight = !facingRight;
+
+        // Multiply the player's x local scale by -1
+        Vector3 theScale = transform.localScale;
+        theScale.x *= -1;
+        transform.localScale = theScale;
+    }
 
     private void CheckTap(DateTime endTime)
     {
@@ -134,10 +150,9 @@ public class PlayerController : MonoBehaviour
     {
         if (!isDashing && canDash)
         {
-            if (moveToRunning)
-            {
-                exitDashZone = true;
-            }
+            if (dir.x > 0 && !facingRight || dir.x < 0 && facingRight) Flip();
+            anim.SetBool("isGrounded", false);
+            anim.Play("Bink_Flap", -1, 0);
             isDashing = true;
             rb2d.gravityScale = 0.0f;
             rb2d.velocity = Vector2.zero;
@@ -150,6 +165,9 @@ public class PlayerController : MonoBehaviour
     {
         if (!isDashing && !inDashZone)
         {
+            if (facingRight) Flip();
+            anim.SetBool("isGrounded", false);
+            anim.Play("Bink_Flap", -1, 0);
             rb2d.velocity = Vector2.zero;
             rb2d.AddForce(new Vector2(-hopVelocity, hopVelocity));
         }
@@ -159,6 +177,9 @@ public class PlayerController : MonoBehaviour
     {
         if (!isDashing && !inDashZone)
         {
+            if (!facingRight) Flip();
+            anim.SetBool("isGrounded", false);
+            anim.Play("Bink_Flap", -1, 0);
             rb2d.velocity = Vector2.zero;
             rb2d.AddForce(new Vector2(hopVelocity, hopVelocity));
         }
@@ -168,13 +189,10 @@ public class PlayerController : MonoBehaviour
     {
         if (other.gameObject.tag == "DashZone")
         {
-            if (!exitDashZone)
-            {
-                inDashZone = true;
-                rb2d.gravityScale = 0.0f;
-                rb2d.velocity = Vector2.zero;
-                StartCoroutine("MoveToPoint", (Vector2)other.gameObject.transform.position);
-            }
+            inDashZone = true;
+            rb2d.gravityScale = 0.0f;
+            rb2d.velocity = Vector2.zero;
+            StartCoroutine("MoveToPoint", (Vector2)other.gameObject.transform.position);
         }
 
         if (other.gameObject.tag == "Goal")
@@ -185,11 +203,16 @@ public class PlayerController : MonoBehaviour
 
     private void OnCollisionEnter2D(Collision2D other)
     {
+        if (other.gameObject.tag == "Ground" && other.GetContact(0).point.y < rb2d.position.y)
+        {
+            anim.SetBool("isGrounded", true);
+        }
         if (other.gameObject.tag == "Hazard")
         {
             this.Die();
         }
     }
+
     private void Die()
     {
         Debug.Log("You ded");
@@ -205,7 +228,6 @@ public class PlayerController : MonoBehaviour
     {
         if (other.gameObject.tag == "DashZone")
         {
-            if (exitDashZone) exitDashZone = false;
             canDash = false;
             inDashZone = false;
         }
@@ -216,27 +238,15 @@ public class PlayerController : MonoBehaviour
         float seconds = 0.333f;
         float elapsed = 0;
         Vector2 startPos = rb2d.position;
-        moveToRunning = true;
 
         while (elapsed < seconds)
         {
-            if (exitDashZone)
-            {
-                rb2d.position = rb2d.position;
-                rb2d.gravityScale = 1.0f;
-                moveToRunning = false;
-                yield break;
-            }
             rb2d.position = Vector2.Lerp(startPos, destination, (elapsed/seconds));
             elapsed += Time.deltaTime;
             yield return new WaitForEndOfFrame();
         }
-        //rb2d.gravityScale = 1.0f;
-        //rb2d.position += new Vector2(0, Mathf.Sin(Time.time));
-        //yield return new WaitForEndOfFrame();
-        //yield return new WaitForSeconds(1.0f);
-        //rb2d.gravityScale = 1.0f;
-        moveToRunning = false;
+        rb2d.velocity = Vector2.zero;
+        rb2d.gravityScale = 0.0f;
     }
 
     private IEnumerator Dash()
