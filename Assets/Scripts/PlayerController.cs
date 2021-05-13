@@ -79,7 +79,6 @@ public class PlayerController : MonoBehaviour
             }
         }
 
-        //if (!anim.GetCurrentAnimatorStateInfo(0).IsName("Bink_Flap")) anim.SetBool("isFlapping", false);
         if (move != 0)
         {
             if (!isDashing && !inDashZone)
@@ -90,6 +89,15 @@ public class PlayerController : MonoBehaviour
                 rb2d.velocity = Vector2.zero;
                 rb2d.AddForce(new Vector2(move * hopVelocity, hopVelocity));
             }
+        }
+
+        if (rb2d.velocity == Vector2.zero)
+        {
+            anim.SetBool("isMoving", false);
+        }
+        else
+        {
+            anim.SetBool("isMoving", true);
         }
     }
 
@@ -151,9 +159,10 @@ public class PlayerController : MonoBehaviour
         if (!isDashing && canDash)
         {
             if (dir.x > 0 && !facingRight || dir.x < 0 && facingRight) Flip();
-            anim.SetBool("isGrounded", false);
-            anim.Play("Bink_Flap", -1, 0);
             isDashing = true;
+            anim.SetBool("isDashing", isDashing);
+            anim.SetBool("isGrounded", false);
+
             rb2d.gravityScale = 0.0f;
             rb2d.velocity = Vector2.zero;
             rb2d.AddForce(dir * dashVelocity);
@@ -221,7 +230,10 @@ public class PlayerController : MonoBehaviour
 
     private void OnTriggerStay2D(Collider2D other)
     {
-        if (other.gameObject.tag == "DashZone") canDash = true;
+        if (other.gameObject.tag == "DashZone")
+        {
+            canDash = true;
+        }
     }
 
     private void OnTriggerExit2D(Collider2D other)
@@ -254,5 +266,6 @@ public class PlayerController : MonoBehaviour
         yield return new WaitForSeconds(0.5f);
         rb2d.gravityScale = 1.0f;
         isDashing = false;
+        anim.SetBool("isDashing", isDashing);
     }
 }
