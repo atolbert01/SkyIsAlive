@@ -8,11 +8,6 @@ public class SceneChanger : MonoBehaviour
     public Animator transition;
     public float transitionTime = 1f;
 
-    void Update()
-    {
-        if (Input.GetMouseButtonDown(1)) ChangeScene(SceneManager.GetActiveScene().buildIndex + 1);
-    }
-
     public void ChangeScene(int sceneIndex)
     {
         StartCoroutine(LoadScene(sceneIndex));

@@ -11,7 +11,6 @@ public class PlayerController : MonoBehaviour
     private bool isDashing = false;
     private bool inDashZone = false;
 
-
     public float swipeThreshold = 50f;
     public float tapThreshold = 0.1f;
     public float timeThreshold = 0.3f;
@@ -224,7 +223,6 @@ public class PlayerController : MonoBehaviour
 
     private void Die()
     {
-        Debug.Log("You ded");
         gm.Restart();
     }
 
@@ -242,6 +240,10 @@ public class PlayerController : MonoBehaviour
         {
             canDash = false;
             inDashZone = false;
+        }
+        if (other.gameObject.tag == "Map")
+        {
+            Die();
         }
     }
 
